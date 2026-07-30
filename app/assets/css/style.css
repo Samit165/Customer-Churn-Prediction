@@ -1,0 +1,338 @@
+/* ==========================================================
+   CHURNGUARD ENTERPRISE THEME
+   Version: 1.0.0
+   ========================================================== */
+
+
+/* ==========================================================
+   1. Google Font
+   ========================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+
+/* ==========================================================
+   2. Color Variables
+   ========================================================== */
+
+:root{
+
+    --bg-color: #0F172A;
+    --surface-color: #1E293B;
+
+    --primary: #2563EB;
+    --primary-hover: #1D4ED8;
+
+    --success: #22C55E;
+    --warning: #F59E0B;
+    --danger: #EF4444;
+
+    --text-primary: #FFFFFF;
+    --text-secondary: #CBD5E1;
+
+    --border: #334155;
+
+    --radius: 14px;
+
+}
+
+
+/* ==========================================================
+   3. Global Layout
+   ========================================================== */
+
+html,
+body,
+[class*="css"]{
+
+    font-family: 'Inter', sans-serif;
+
+}
+
+.stApp{
+
+    background-color: var(--bg-color);
+
+    color: var(--text-primary);
+
+}
+
+
+/* ==========================================================
+   4. Streamlit Cleanup
+   ========================================================== */
+
+/* Remove Streamlit Menu */
+
+#MainMenu{
+
+    visibility:hidden;
+
+}
+
+/* Remove Footer */
+
+footer{
+
+    visibility:hidden;
+
+}
+
+/* Remove Header */
+
+header{
+
+    visibility:hidden;
+
+}
+
+
+/* ==========================================================
+   5. Typography
+   ========================================================== */
+
+h1{
+
+    color: var(--text-primary);
+
+    font-size: 2.3rem;
+
+    font-weight:700;
+
+}
+
+h2{
+
+    color: var(--text-primary);
+
+    font-weight:600;
+
+}
+
+h3{
+
+    color: var(--text-primary);
+
+}
+
+p{
+
+    color: var(--text-secondary);
+
+}
+/* ==========================================================
+   6. Buttons
+   ========================================================== */
+
+.stButton > button {
+
+    width: 100%;
+
+    background: var(--primary);
+
+    color: white;
+
+    border: none;
+
+    border-radius: 10px;
+
+    padding: 0.75rem;
+
+    font-size: 16px;
+
+    font-weight: 600;
+
+    transition: all 0.25s ease;
+
+}
+
+.stButton > button:hover {
+
+    background: var(--primary-hover);
+
+    transform: translateY(-2px);
+
+    box-shadow: 0 8px 20px rgba(37,99,235,.35);
+
+}
+
+
+/* ==========================================================
+   7. Text Inputs
+   ========================================================== */
+
+.stTextInput input,
+.stNumberInput input,
+.stTextArea textarea {
+
+    background-color: var(--surface-color);
+
+    color: white;
+
+    border: 1px solid var(--border);
+
+    border-radius: 10px;
+
+    padding: 0.65rem;
+
+}
+
+.stTextInput input:focus {
+
+    border: 1px solid var(--primary);
+
+    box-shadow: 0 0 8px rgba(37,99,235,.35);
+
+}
+
+
+/* ==========================================================
+   8. Select Boxes
+   ========================================================== */
+
+.stSelectbox {
+
+    color: white;
+
+}
+
+
+/* ==========================================================
+   9. Cards
+   ========================================================== */
+
+.card {
+
+    background: rgba(30,41,59,.90);
+
+    border: 1px solid rgba(255,255,255,.08);
+
+    border-radius: 16px;
+
+    padding: 25px;
+
+    box-shadow: 0 8px 24px rgba(0,0,0,.35);
+
+}
+
+
+/* ==========================================================
+   10. Metric Cards
+   ========================================================== */
+
+.metric-card {
+
+    background: var(--surface-color);
+
+    border-radius: 14px;
+
+    padding: 20px;
+
+    border-left: 5px solid var(--primary);
+
+    margin-bottom: 15px;
+
+}
+
+
+/* ==========================================================
+   11. Success / Warning / Error
+   ========================================================== */
+
+.stSuccess{
+
+    border-radius:10px;
+
+}
+
+.stError{
+
+    border-radius:10px;
+
+}
+
+.stWarning{
+
+    border-radius:10px;
+
+}
+
+
+/* ==========================================================
+   12. Sidebar
+   ========================================================== */
+
+[data-testid="stSidebar"]{
+
+    background-color:#111827;
+
+    border-right:1px solid #334155;
+
+}
+/* ==========================================================
+   LOGIN
+   ========================================================== */
+
+.login-container{
+
+    max-width:480px;
+
+    margin:auto;
+
+    padding-top:70px;
+
+}
+
+.login-card{
+
+    background:rgba(30,41,59,.85);
+
+    backdrop-filter:blur(16px);
+
+    border:1px solid rgba(255,255,255,.08);
+
+    border-radius:20px;
+
+    padding:40px;
+
+    text-align:center;
+
+    box-shadow:0 15px 40px rgba(0,0,0,.35);
+
+}
+
+.login-card h1{
+
+    margin-bottom:10px;
+
+}
+
+.subtitle{
+
+    color:#CBD5E1;
+
+    font-size:17px;
+
+}
+
+.subtitle2{
+
+    color:#94A3B8;
+
+    font-size:14px;
+
+    margin-bottom:30px;
+
+}
+
+.login-footer{
+
+    text-align:center;
+
+    margin-top:35px;
+
+    color:#94A3B8;
+
+    font-size:14px;
+
+}
