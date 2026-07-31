@@ -336,3 +336,100 @@ p{
     font-size:14px;
 
 }
+/* ================================
+   ChurnGuard Enterprise Theme
+================================ */
+
+/* Hide Streamlit Branding */
+#MainMenu {
+    visibility: hidden;
+}
+
+footer {
+    visibility: hidden;
+}
+
+header {
+    visibility: hidden;
+}
+
+/* Main Background */
+.stApp {
+    background-color: #0F172A;
+    color: #FFFFFF;
+}
+
+/* Titles */
+h1, h2, h3, h4 {
+    color: white;
+    font-weight: 700;
+}
+
+/* Cards */
+.metric-card {
+    background: #1E293B;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0px 4px 20px rgba(0,0,0,0.30);
+    transition: 0.3s;
+}
+
+.metric-card:hover {
+    transform: translateY(-4px);
+}
+
+/* Buttons */
+.stButton>button {
+    width: 100%;
+    border-radius: 10px;
+    background: #2563EB;
+    color: white;
+    font-weight: bold;
+    border: none;
+    padding: 10px;
+}
+
+.stButton>button:hover {
+    background: #1D4ED8;
+}
+
+/* Inputs */
+.stTextInput input,
+.stNumberInput input,
+.stSelectbox {
+    border-radius: 10px;
+}
+
+/* Sidebar */
+section[data-testid="stSidebar"] {
+    background: #111827;
+}
+
+/* Tables */
+table {
+    border-radius: 10px;
+}
+
+/* Success */
+.success-box {
+    background: #065F46;
+    color: white;
+    padding: 12px;
+    border-radius: 10px;
+}
+
+/* Warning */
+.warning-box {
+    background: #92400E;
+    color: white;
+    padding: 12px;
+    border-radius: 10px;
+}
+
+/* Danger */
+.danger-box {
+    background: #991B1B;
+    color: white;
+    padding: 12px;
+    border-radius: 10px;
+}

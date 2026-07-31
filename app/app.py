@@ -1,132 +1,100 @@
-"""
-==========================================================
-ChurnGuard
-Main Application Entry Point
-==========================================================
-"""
-
 import streamlit as st
 
 from utils.styling import load_css
-from components.login import render_login
+from components.sidebar import show_sidebar
 from core.auth import authenticate
-from core.session import login_user, logout_user
+from components.login import render_login
 
-# ---------------------------------------------------------
+from core.session import (
+    current_user,
+    login_user,
+    logout_user,
+)
+
+from views import (
+    dashboard,
+    predict,
+    bulk_prediction,
+    reports,
+    history,
+    about,
+    admin,
+    explainability,
+)
+# -----------------------------
 # Page Configuration
-# ---------------------------------------------------------
-
+# -----------------------------
 st.set_page_config(
     page_title="ChurnGuard",
     page_icon="🛡️",
     layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="collapsed"
 )
 
-# ---------------------------------------------------------
-# Load Custom CSS
-# ---------------------------------------------------------
-
+# -----------------------------
+# Load CSS
+# -----------------------------
 load_css()
-
-# ---------------------------------------------------------
-# Hide Streamlit Default UI
-# ---------------------------------------------------------
-
-st.markdown(
-    """
-    <style>
-
-    /* Hide default multipage navigation */
-    section[data-testid="stSidebarNav"]{
-        display:none;
-    }
-
-    /* Hide sidebar collapse button */
-    button[kind="header"]{
-        display:none;
-    }
-
-    /* Hide Deploy button */
-    div[data-testid="stToolbar"]{
-        display:none;
-    }
-
-    /* Hide Main Menu */
-    #MainMenu{
-        visibility:hidden;
-    }
-
-    footer{
-        visibility:hidden;
-    }
-
-    header{
-        visibility:hidden;
-    }
-
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
-# ---------------------------------------------------------
-# Session State
-# ---------------------------------------------------------
-
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
-# ---------------------------------------------------------
-# Login Screen
-# ---------------------------------------------------------
+# -----------------------------
+# Header
+# -----------------------------
+# show_header()
 
+# st.markdown("---")
+
+# -----------------------------
+# Login Form
+# -----------------------------
 if not st.session_state.authenticated:
 
-    username, password, login = render_login()
+    username, password, login_clicked = render_login()
 
-    if login:
+    if login_clicked:
 
-        user = authenticate(username, password)
-
-        if user:
-
-            login_user(user)
-
-            st.success(
-                f"Welcome {user['full_name']}!"
-            )
-
-            st.rerun()
+        if not username or not password:
+            st.error("Please enter username and password.")
 
         else:
 
-            st.error(
-                "Invalid username or password."
-            )
+            user = authenticate(username, password)
 
-# ---------------------------------------------------------
-# Dashboard
-# ---------------------------------------------------------
+            if user:
+
+                login_user(user)
+
+                st.rerun()
+
+            else:
+
+                st.error("Invalid username or password.")
 
 else:
 
-    user = st.session_state.user
+    user = current_user()
 
-    st.title("Dashboard")
-
-    st.success(
-        f"Welcome {user['full_name']}"
-    )
-
-    st.write(f"Username : {user['username']}")
-    st.write(f"Role : {user['role']}")
-    st.write(f"Email : {user['email']}")
-
-    st.divider()
-
-    if st.button("Logout"):
-
+    if user is None:
         logout_user()
-
         st.rerun()
+
+    selected = show_sidebar(user["role"])
+
+    ROUTES = {
+        "Dashboard": dashboard.render,
+        "Predict": predict.render,
+        "Bulk Prediction": bulk_prediction.render,
+        "Reports": reports.render,
+        "History": history.render,
+        "About": about.render,
+        "Admin": admin.render,
+        "Explainability": explainability.render,
+    }
+
+    if selected == "Logout":
+        logout_user()
+        st.rerun()
+
+    elif selected in ROUTES:
+        ROUTES[selected]()
