@@ -1,7 +1,7 @@
 import streamlit as st
 
 from services.predictor import predict_customer
-
+from services.predictor import get_city_list
 
 def render():
 
@@ -121,3 +121,8 @@ def render():
             "Churn Probability",
             f"{probability*100:.2f}%"
         )
+        city = st.selectbox(
+    "City",
+    get_city_list(),
+    placeholder="Search or select a city..."
+)
