@@ -62,28 +62,90 @@ body,
    4. Streamlit Cleanup
    ========================================================== */
 
-/* Remove Streamlit Menu */
+/* ==========================================================
+   4. Streamlit Header & Sidebar Navigation Controls
+   ========================================================== */
 
-#MainMenu{
-
-    visibility:hidden;
-
+/* Make Streamlit Header background transparent so main content shows cleanly */
+header[data-testid="stHeader"],
+.stAppHeader {
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
 }
 
-/* Remove Footer */
-
-footer{
-
-    visibility:hidden;
-
+/* Hide ONLY Streamlit branding, deploy button, and top decoration line */
+#MainMenu,
+footer,
+#stDecoration,
+[data-testid="stDecoration"],
+.stAppDeployButton,
+[data-testid="stAppDeployButton"] {
+    display: none !important;
+    visibility: hidden !important;
 }
 
-/* Remove Header */
+/* Ensure Sidebar Expand Button (when collapsed) is ALWAYS visible and clickable */
+[data-testid="stSidebarCollapsedControl"],
+[data-testid="stSidebarCollapsedControl"] button,
+button[aria-label="Open sidebar"],
+button[aria-label="Expand sidebar"] {
+    visibility: visible !important;
+    display: flex !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    z-index: 999999 !important;
+}
 
-header{
+/* Ensure Sidebar Collapse Button (when expanded) is ALWAYS visible and clickable */
+[data-testid="stSidebarCollapseButton"],
+[data-testid="stSidebarCollapseButton"] button,
+button[aria-label="Close sidebar"],
+button[aria-label="Collapse sidebar"] {
+    visibility: visible !important;
+    display: flex !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    z-index: 999999 !important;
+}
 
-    visibility:hidden;
+/* 
+   STYLISH UI / UX & MICRO-ANIMATIONS FOR SIDEBAR TOGGLE BUTTONS
+*/
+[data-testid="stSidebarCollapsedControl"] button,
+[data-testid="stSidebarCollapseButton"] button,
+button[aria-label="Open sidebar"],
+button[aria-label="Close sidebar"] {
+    background: rgba(30, 41, 59, 0.9) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 10px !important;
+    color: #FFFFFF !important;
+    padding: 6px 10px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4) !important;
+}
 
+/* Hover effect with vibrant accent blue glow */
+[data-testid="stSidebarCollapsedControl"] button:hover,
+[data-testid="stSidebarCollapseButton"] button:hover,
+button[aria-label="Open sidebar"]:hover,
+button[aria-label="Close sidebar"]:hover {
+    background: #2563EB !important;
+    border-color: rgba(255, 255, 255, 0.4) !important;
+    transform: scale(1.1) translateY(-1px) !important;
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.6) !important;
+}
+
+/* SVG icons inside toggle buttons */
+[data-testid="stSidebarCollapsedControl"] svg,
+[data-testid="stSidebarCollapseButton"] svg,
+button[aria-label="Open sidebar"] svg,
+button[aria-label="Close sidebar"] svg {
+    fill: #FFFFFF !important;
+    color: #FFFFFF !important;
+    stroke: #FFFFFF !important;
 }
 
 
@@ -340,16 +402,12 @@ p{
    ChurnGuard Enterprise Theme
 ================================ */
 
-/* Hide Streamlit Branding */
+/* Header Streamlit Branding */
 #MainMenu {
     visibility: hidden;
 }
 
 footer {
-    visibility: hidden;
-}
-
-header {
     visibility: hidden;
 }
 

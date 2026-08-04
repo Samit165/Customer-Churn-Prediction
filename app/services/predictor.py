@@ -1,28 +1,32 @@
 import joblib
 import pandas as pd
+# pyrefly: ignore [missing-import]
 import streamlit as st
+
+from core.config import MODEL_PATH, PREPROCESSOR_PATH
 
 
 @st.cache_resource
 def load_model():
-    model = joblib.load("models/churn_model.pkl")
-    preprocessor = joblib.load("models/preprocessor.pkl")
+    model = joblib.load(MODEL_PATH)
+    preprocessor = joblib.load(PREPROCESSOR_PATH)
     return model, preprocessor
 
 
+@st.cache_data
+def get_city_list():
+    _, preprocessor = load_model()
+
+    encoder = preprocessor.named_transformers_["cat"]
+
+    categorical_columns = preprocessor.transformers_[1][2]
+
+    city_index = list(categorical_columns).index("City")
+
+    return sorted(encoder.categories_[city_index].tolist())
+
+
 def predict_customer(customer_data: dict):
-    """
-    Predict customer churn.
-
-    Parameters
-    ----------
-    customer_data : dict
-
-    Returns
-    -------
-    prediction : int
-    probability : float
-    """
 
     model, preprocessor = load_model()
 
@@ -34,22 +38,6 @@ def predict_customer(customer_data: dict):
 
     probability = model.predict_proba(X)[0][1]
 
-    return prediction, probability
-@st.cache_resource
-def load_model():
-    model = joblib.load("models/churn_model.pkl")
-    preprocessor = joblib.load("models/preprocessor.pkl")
-    return model, preprocessor
+    confidence = probability if prediction == 1 else (1 - probability)
 
-
-@st.cache_data
-def get_city_list():
-    _, preprocessor = load_model()
-
-    encoder = preprocessor.named_transformers_["cat"]
-
-    categorical_cols = preprocessor.transformers_[1][2]
-
-    city_index = list(categorical_cols).index("City")
-
-    return sorted(encoder.categories_[city_index].tolist())
+    return prediction, probability, confidence

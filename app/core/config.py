@@ -35,11 +35,13 @@ APP_DESCRIPTION = (
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+PROJECT_ROOT = BASE_DIR.parent
+
 DATABASE_DIR = BASE_DIR / "database"
 
-MODEL_DIR = BASE_DIR / "models"
+MODEL_DIR = PROJECT_ROOT / "models"
 
-ASSETS_DIR = BASE_DIR / "app" / "assets"
+ASSETS_DIR = BASE_DIR / "assets"
 
 CSS_DIR = ASSETS_DIR / "css"
 

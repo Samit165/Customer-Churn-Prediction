@@ -14,6 +14,8 @@ def render():
 
     st.caption("Customer Churn Analytics Overview")
 
+    st.info("💡 Quick Navigation: Select **🔮 Predict** from the left sidebar menu to evaluate customer churn risk.")
+
     c1, c2, c3, c4 = st.columns(4)
 
     with c1:

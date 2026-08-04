@@ -16,6 +16,7 @@ import sqlite3
 from pathlib import Path
 from datetime import datetime
 
+# pyrefly: ignore [missing-import]
 import bcrypt
 
 # --------------------------------------------------
@@ -39,6 +40,35 @@ def get_connection():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
+
+
+def execute_query(query, params=()):
+    """Execute INSERT/UPDATE/DELETE queries."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(query, params)
+    conn.commit()
+    conn.close()
+
+
+def fetch_one(query, params=()):
+    """Fetch a single row."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(query, params)
+    row = cursor.fetchone()
+    conn.close()
+    return row
+
+
+def fetch_all(query, params=()):
+    """Fetch multiple rows."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(query, params)
+    rows = cursor.fetchall()
+    conn.close()
+    return rows
 
 
 # --------------------------------------------------
@@ -357,83 +387,3 @@ def save_prediction(username: str,
     conn.commit()
 
     conn.close()
-    
-"""
-==========================================================
-ChurnGuard
-Database Manager
-==========================================================
-"""
-
-# ---------------------------------------------------------
-# Database Path
-# ---------------------------------------------------------
-
-DB_PATH = (
-    Path(__file__).parent.parent
-    / "database"
-    / "users.db"
-)
-
-
-def get_connection():
-    """
-    Returns a SQLite connection with dictionary-style rows.
-    """
-
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-
-    return conn
-
-
-def execute_query(query, params=()):
-    """
-    Execute INSERT/UPDATE/DELETE queries.
-    """
-
-    conn = get_connection()
-
-    cursor = conn.cursor()
-
-    cursor.execute(query, params)
-
-    conn.commit()
-
-    conn.close()
-
-
-def fetch_one(query, params=()):
-    """
-    Fetch a single row.
-    """
-
-    conn = get_connection()
-
-    cursor = conn.cursor()
-
-    cursor.execute(query, params)
-
-    row = cursor.fetchone()
-
-    conn.close()
-
-    return row
-
-
-def fetch_all(query, params=()):
-    """
-    Fetch multiple rows.
-    """
-
-    conn = get_connection()
-
-    cursor = conn.cursor()
-
-    cursor.execute(query, params)
-
-    rows = cursor.fetchall()
-
-    conn.close()
-
-    return rows

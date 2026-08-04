@@ -1,9 +1,11 @@
+# pyrefly: ignore [missing-import]
 import streamlit as st
 
 from utils.styling import load_css
 from components.sidebar import show_sidebar
 from core.auth import authenticate
 from components.login import render_login
+from core.database import initialize_database
 
 from core.session import (
     current_user,
@@ -21,6 +23,9 @@ from views import (
     admin,
     explainability,
 )
+
+# Initialize Database
+initialize_database()
 # -----------------------------
 # Page Configuration
 # -----------------------------
@@ -28,7 +33,7 @@ st.set_page_config(
     page_title="ChurnGuard",
     page_icon="🛡️",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
 # -----------------------------
@@ -97,4 +102,10 @@ else:
         st.rerun()
 
     elif selected in ROUTES:
-        ROUTES[selected]()
+
+        try:
+            ROUTES[selected]()
+
+        except Exception as e:
+            st.error("Something went wrong.")
+            st.exception(e)
