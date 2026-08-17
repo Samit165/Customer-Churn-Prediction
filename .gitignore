@@ -1,7 +1,18 @@
-__pycache__/
-*.pyc
-.ipynb_checkpoints/
-.venv/
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment / secrets
 .env
-models/
-churn_env/
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Streamlit
+.streamlit/secrets.toml
