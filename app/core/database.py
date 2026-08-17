@@ -135,9 +135,23 @@ def initialize_database():
             customer_id TEXT,
             prediction TEXT,
             probability REAL,
+            prediction_type TEXT NOT NULL DEFAULT 'Single',
             created_at TEXT NOT NULL
         )
     """)
+    # Add prediction_type to existing databases
+    cursor.execute("PRAGMA table_info(predictions)")
+    prediction_columns = [
+        column[1]
+        for column in cursor.fetchall()
+    ]
+
+    if "prediction_type" not in prediction_columns:
+        cursor.execute("""
+            ALTER TABLE predictions
+            ADD COLUMN prediction_type TEXT NOT NULL DEFAULT 'Single'
+        """)
+    
 
     conn.commit()
 
@@ -360,10 +374,14 @@ def log_activity(username: str,
 # Prediction Log
 # --------------------------------------------------
 
-def save_prediction(username: str,
-                    customer_id: str,
-                    prediction: str,
-                    probability: float):
+def save_prediction(
+    username: str,
+    customer_id: str,
+    prediction: str,
+    probability: float,
+    prediction_type: str = "Single"
+):
+    """Save a customer churn prediction."""
 
     conn = get_connection()
 
@@ -373,17 +391,49 @@ def save_prediction(username: str,
             customer_id,
             prediction,
             probability,
+            prediction_type,
             created_at
         )
-        VALUES (?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?)
     """, (
         username,
         customer_id,
         prediction,
         probability,
+        prediction_type,
         datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     ))
 
     conn.commit()
+    conn.close()
 
+
+def delete_prediction(prediction_id: int):
+    """Delete a single prediction record."""
+
+    conn = get_connection()
+
+    conn.execute(
+        "DELETE FROM predictions WHERE id=?",
+        (prediction_id,)
+    )
+
+    conn.commit()
+    conn.close()
+
+
+def clear_prediction_history():
+    """Delete all prediction history and reset the ID sequence."""
+
+    conn = get_connection()
+
+    conn.execute(
+        "DELETE FROM predictions"
+    )
+    # Reset AUTOINCREMENT sequence
+    conn.execute(
+        "DELETE FROM sqlite_sequence WHERE name='predictions'"
+    )
+
+    conn.commit()
     conn.close()
