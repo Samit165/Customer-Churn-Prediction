@@ -3,7 +3,7 @@ import streamlit as st
 import pandas as pd
 from utils.csv_validator import validate_csv
 from services.bulk_predictor import predict_bulk
-from core.database import save_prediction, log_activity
+from core.database import save_predictions_bulk, log_activity
 
 def render():
     """Render the Bulk Prediction page."""
@@ -93,7 +93,7 @@ def render():
                     ]
                 )
                 # ---------------------------------
-                # Save Bulk Predictions to Database
+                # Save Bulk Predictions to Database (Batched)
                 # ---------------------------------
 
                 username = st.session_state.get(
@@ -104,22 +104,18 @@ def render():
                     "system"
                 )
 
-                for _, row in result_df.iterrows():
-
-                    prediction_label = row["Prediction"]
-
-                    probability = (
-                        float(row["Probability"]) / 100
-                    )
-
-                    save_prediction(
+                bulk_records = [
+                    (
                         username,
                         row["Customer ID"],
-                        prediction_label,
-                        probability,
+                        row["Prediction"],
+                        float(row["Probability"]) / 100,
                         "Bulk"
-                        
                     )
+                    for _, row in result_df.iterrows()
+                ]
+
+                save_predictions_bulk(bulk_records)
 
                 log_activity(
                     username,

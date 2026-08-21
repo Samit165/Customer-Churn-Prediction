@@ -79,21 +79,16 @@ def show_sidebar(role: str) -> str:
                 letter-spacing: 0.4px;
             }
 
-            /* ── Nav button wrapper ─────────────────────────── */
-            /* Target the stButton wrapper inside the sidebar */
+            /* ── Nav button base styling ───────────────────── */
             section[data-testid="stSidebar"] div.stButton > button {
                 display: flex !important;
                 align-items: center !important;
                 gap: 11px !important;
                 width: 100% !important;
                 padding: 10px 16px !important;
-                margin: 2px 0 !important;
+                margin: 3px 0 !important;
                 border-radius: 12px !important;
-                border: 1px solid transparent !important;
-                background: transparent !important;
-                color: #94A3B8 !important;
                 font-size: 14px !important;
-                font-weight: 500 !important;
                 text-align: left !important;
                 justify-content: flex-start !important;
                 cursor: pointer !important;
@@ -103,11 +98,21 @@ def show_sidebar(role: str) -> str:
                     border-color 0.25s ease,
                     box-shadow   0.25s ease,
                     transform    0.25s cubic-bezier(0.4,0,0.2,1) !important;
+            }
+
+            /* ── INACTIVE / SECONDARY BUTTONS ───────────────── */
+            section[data-testid="stSidebar"] div.stButton > button[kind="secondary"],
+            section[data-testid="stSidebar"] div.stButton > button[data-testid="baseButton-secondary"] {
+                background: transparent !important;
+                color: #94A3B8 !important;
+                border: 1px solid transparent !important;
                 box-shadow: none !important;
+                font-weight: 500 !important;
             }
 
             /* ── HOVER GLOW ─────────────────────────────────── */
-            section[data-testid="stSidebar"] div.stButton > button:hover {
+            section[data-testid="stSidebar"] div.stButton > button[kind="secondary"]:hover,
+            section[data-testid="stSidebar"] div.stButton > button[data-testid="baseButton-secondary"]:hover {
                 background    : rgba(37,99,235,0.18) !important;
                 color         : #FFFFFF !important;
                 border-color  : rgba(96,165,250,0.45) !important;
@@ -119,26 +124,26 @@ def show_sidebar(role: str) -> str:
                     inset 0 0 14px rgba(37,99,235,0.08) !important;
             }
 
-            /* ── ACTIVE ─────────────────────────────────────── */
-            section[data-testid="stSidebar"] div.stButton > button[data-active="true"],
-            section[data-testid="stSidebar"] div.stButton > button.cg-active {
+            /* ── ACTIVE / PRIMARY BUTTON ────────────────────── */
+            section[data-testid="stSidebar"] div.stButton > button[kind="primary"],
+            section[data-testid="stSidebar"] div.stButton > button[data-testid="baseButton-primary"] {
                 background   : linear-gradient(110deg,#1D4ED8,#2563EB 60%,#3B82F6) !important;
                 color        : #FFFFFF !important;
-                border-color : rgba(147,197,253,0.40) !important;
+                border       : 1px solid rgba(147,197,253,0.45) !important;
                 box-shadow   :
                     0 4px 18px rgba(37,99,235,0.50),
                     0 0  28px rgba(37,99,235,0.22) !important;
+                font-weight  : 600 !important;
                 transform    : translateX(0) !important;
             }
 
-            /* ── Logout — red glow ──────────────────────────── */
-            section[data-testid="stSidebar"] div.stButton > button.cg-logout:hover {
+            /* ── Logout hover (last item) ───────────────────── */
+            section[data-testid="stSidebar"] div.stButton:last-of-type > button:hover {
                 background   : rgba(239,68,68,0.18) !important;
                 border-color : rgba(239,68,68,0.45) !important;
                 box-shadow   :
                     0 0 10px rgba(239,68,68,0.55),
                     0 0 24px rgba(239,68,68,0.28) !important;
-                color: #FCA5A5 !important;
             }
 
             /* Remove focus ring */
@@ -174,8 +179,7 @@ def show_sidebar(role: str) -> str:
                     unsafe_allow_html=True,
                 )
 
-            # Button label: icon + text (Bootstrap icon rendered via HTML is
-            # not possible inside st.button, so we use emoji/unicode as fallback)
+            # Button label: icon + text
             EMOJI = {
                 "Dashboard":       "🏠",
                 "Predict":         "📈",
@@ -188,40 +192,17 @@ def show_sidebar(role: str) -> str:
                 "Logout":          "🚪",
             }
 
-            btn_label = f"{'  ' if is_active else ''}{EMOJI.get(label,'•')}  {label}"
+            btn_label = f"{EMOJI.get(label,'•')}  {label}"
 
             clicked = st.button(
                 btn_label,
                 key=f"nav__{label}",
+                type="primary" if is_active else "secondary",
                 use_container_width=True,
             )
 
             if clicked:
                 st.session_state.nav_selected = label
                 st.rerun()
-
-        # ── JS to apply active class to the currently selected button ──
-        # We inject JS to visually highlight the active button
-        active_label = current
-        st.markdown(
-            f"""
-            <script>
-            (function() {{
-                const btns = window.parent.document.querySelectorAll(
-                    'section[data-testid="stSidebar"] div.stButton > button'
-                );
-                btns.forEach(btn => {{
-                    if (btn.innerText.trim().includes({repr(active_label)})) {{
-                        btn.style.background = 'linear-gradient(110deg,#1D4ED8,#2563EB 60%,#3B82F6)';
-                        btn.style.color = '#FFFFFF';
-                        btn.style.borderColor = 'rgba(147,197,253,0.40)';
-                        btn.style.boxShadow = '0 4px 18px rgba(37,99,235,0.50),0 0 28px rgba(37,99,235,0.22)';
-                    }}
-                }});
-            }})();
-            </script>
-            """,
-            unsafe_allow_html=True,
-        )
 
     return st.session_state.nav_selected

@@ -122,18 +122,32 @@ def authenticate(username: str, password: str):
 # Admin Password Reset
 # ---------------------------------------------------------
 
-def reset_admin_password(new_password: str):
+def reset_admin_password(new_password: str, username: str = None):
     """
     Reset the admin password.
+    If username is provided, updates that specific user; otherwise updates user with role='Admin'.
     """
 
-    execute_query(
-        """
-        UPDATE users
-        SET password_hash = ?
-        WHERE username = 'admin'
-        """,
-        (
-            hash_password(new_password),
-        ),
-    )
+    if username:
+        execute_query(
+            """
+            UPDATE users
+            SET password_hash = ?
+            WHERE username = ?
+            """,
+            (
+                hash_password(new_password),
+                username,
+            ),
+        )
+    else:
+        execute_query(
+            """
+            UPDATE users
+            SET password_hash = ?
+            WHERE role = 'Admin' OR username = 'admin' OR username = 'samit'
+            """,
+            (
+                hash_password(new_password),
+            ),
+        )

@@ -80,9 +80,9 @@ def predict_bulk(df: pd.DataFrame) -> pd.DataFrame:
         in zip(predictions, probabilities)
     ]
 
-    result_df["Confidence"] = (
-        pd.Series(confidences) * 100
-    ).round(2)
+    result_df["Confidence"] = [
+        round(c * 100, 2) for c in confidences
+    ]
 
     # -----------------------------
     # Risk Level

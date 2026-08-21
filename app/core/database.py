@@ -510,7 +510,7 @@ def save_prediction(
     probability: float,
     prediction_type: str = "Single"
 ):
-    """Save a customer churn prediction."""
+    """Save a single customer churn prediction."""
 
     conn = get_connection()
 
@@ -532,6 +532,56 @@ def save_prediction(
         prediction_type,
         datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     ))
+
+    conn.commit()
+    conn.close()
+
+
+def save_predictions_bulk(records: list):
+    """
+    Save multiple customer churn predictions in a single transaction.
+
+    records: list of tuples (username, customer_id, prediction, probability, prediction_type, created_at)
+             or dicts with corresponding keys.
+    """
+    if not records:
+        return
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    # Normalize records if tuples or dicts
+    formatted = []
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    for r in records:
+        if isinstance(r, (list, tuple)):
+            # If created_at not provided (length 5), append now_str
+            if len(r) == 5:
+                formatted.append((*r, now_str))
+            else:
+                formatted.append(r)
+        elif isinstance(r, dict):
+            formatted.append((
+                r["username"],
+                r["customer_id"],
+                r["prediction"],
+                r["probability"],
+                r.get("prediction_type", "Bulk"),
+                r.get("created_at", now_str),
+            ))
+
+    cursor.executemany("""
+        INSERT INTO predictions(
+            username,
+            customer_id,
+            prediction,
+            probability,
+            prediction_type,
+            created_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, formatted)
 
     conn.commit()
     conn.close()
