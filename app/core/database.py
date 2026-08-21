@@ -115,6 +115,31 @@ def initialize_database():
         )
     """)
 
+    # --------------------------------------------------
+    # Migrate existing users table
+    # --------------------------------------------------
+
+    cursor.execute("PRAGMA table_info(users)")
+
+    user_columns = [
+        column[1]
+        for column in cursor.fetchall()
+    ]
+
+    if "status" not in user_columns:
+
+        cursor.execute("""
+            ALTER TABLE users
+            ADD COLUMN status TEXT NOT NULL DEFAULT 'Active'
+        """)
+
+    if "last_login" not in user_columns:
+
+        cursor.execute("""
+            ALTER TABLE users
+            ADD COLUMN last_login TEXT
+        """)
+
     # ---------------- ACTIVITY LOG ---------------- #
 
     cursor.execute("""
@@ -155,16 +180,57 @@ def initialize_database():
 
     conn.commit()
 
-    # Create default admin if it doesn't exist
+    # --------------------------------------------------
+    # Admin Account Migration / Initialization
+    # --------------------------------------------------
 
+    # Check for existing admin account
     cursor.execute(
-        "SELECT * FROM users WHERE username=?",
+        "SELECT id FROM users WHERE username=?",
         ("admin",)
     )
 
-    admin = cursor.fetchone()
+    old_admin = cursor.fetchone()
 
-    if admin is None:
+    # Check whether the new admin account already exists
+    cursor.execute(
+        "SELECT id FROM users WHERE username=?",
+        ("samit",)
+    )
+
+    new_admin = cursor.fetchone()
+
+
+    # --------------------------------------------------
+    # Migrate existing admin account
+    # --------------------------------------------------
+
+    if old_admin is not None and new_admin is None:
+
+        cursor.execute("""
+            UPDATE users
+            SET
+                username=?,
+                password_hash=?,
+                role=?,
+                status=?
+            WHERE username=?
+        """, (
+            "samit",
+            hash_password("samit@0616"),
+            "Admin",
+            "Active",
+            "admin"
+        ))
+
+        conn.commit()
+
+
+    # --------------------------------------------------
+    # Create new admin if no admin account exists
+    # --------------------------------------------------
+
+    elif old_admin is None and new_admin is None:
 
         cursor.execute("""
             INSERT INTO users(
@@ -176,8 +242,8 @@ def initialize_database():
             )
             VALUES (?, ?, ?, ?, ?)
         """, (
-            "admin",
-            hash_password("Admin@123"),
+            "samit",
+            hash_password("samit@0616"),
             "Admin",
             "Active",
             datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -201,6 +267,32 @@ def create_user(username: str,
 
     try:
 
+        # ---------------------------------------------
+        # Check whether username already exists
+        # ---------------------------------------------
+
+        cursor.execute(
+            """
+            SELECT id
+            FROM users
+            WHERE LOWER(username) = LOWER(?)
+            """,
+            (username.strip(),)
+        )
+
+        existing_user = cursor.fetchone()
+
+        if existing_user is not None:
+
+            return {
+                "success": False,
+                "error": "exists"
+            }
+
+        # ---------------------------------------------
+        # Create user
+        # ---------------------------------------------
+
         cursor.execute("""
             INSERT INTO users(
                 username,
@@ -211,7 +303,7 @@ def create_user(username: str,
             )
             VALUES (?, ?, ?, ?, ?)
         """, (
-            username,
+            username.strip(),
             hash_password(password),
             role,
             "Active",
@@ -220,20 +312,37 @@ def create_user(username: str,
 
         conn.commit()
 
-        log_activity(
-            username,
-            "Account Created"
+        return {
+            "success": True,
+            "error": None
+        }
+
+    except sqlite3.IntegrityError as e:
+
+        print(
+            f"[DATABASE] User creation failed: {e}"
         )
 
-        return True
+        return {
+            "success": False,
+            "error": str(e)
+        }
 
-    except sqlite3.IntegrityError:
+    except Exception as e:
 
-        return False
+        print(
+            f"[DATABASE] Unexpected error creating user: {e}"
+        )
+
+        return {
+            "success": False,
+            "error": str(e)
+        }
 
     finally:
 
         conn.close()
+
 
 
 def authenticate_user(username: str,
