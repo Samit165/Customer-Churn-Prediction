@@ -5,6 +5,7 @@ import pandas as pd
 import plotly.express as px
 
 from core.database import fetch_all
+from components.charts import model_performance
 
 
 # --------------------------------------------------
@@ -40,8 +41,31 @@ def _risk_level(probability):
         return "High"
     elif probability >= 0.40:
         return "Medium"
-    else:
-        return "Low"
+    return "Low"
+
+
+def _chart_layout(fig):
+    """Apply the ChurnGuard report chart theme."""
+
+    fig.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(
+            color="#CBD5E1",
+            family="Inter, sans-serif"
+        ),
+        margin=dict(
+            l=20,
+            r=20,
+            t=55,
+            b=30
+        ),
+        legend=dict(
+            font=dict(color="#CBD5E1")
+        ),
+    )
+
+    return fig
 
 
 # --------------------------------------------------
@@ -66,8 +90,8 @@ def render():
 
         st.info(
             "📭 No prediction data is available yet. "
-            "Generate predictions from the Predict or Bulk Prediction page "
-            "to populate this report."
+            "Generate predictions from the Predict or Bulk Prediction "
+            "page to populate this report."
         )
 
         return
@@ -164,7 +188,8 @@ def render():
 
     col1, col2 = st.columns(2)
 
-    # Churn Distribution
+    # ---------------- Churn Distribution ----------------
+
     with col1:
 
         churn_data = (
@@ -182,15 +207,21 @@ def render():
             churn_data,
             names="Prediction",
             values="Count",
-            hole=0.55,
+            hole=0.58,
             title="Churn vs No Churn"
         )
 
-        fig.update_layout(
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="#CBD5E1"),
-            legend_title=""
+        fig = _chart_layout(fig)
+
+        fig.update_traces(
+            textposition="inside",
+            textinfo="percent",
+            hovertemplate=(
+                "<b>%{label}</b><br>"
+                "Predictions: %{value}<br>"
+                "Share: %{percent}"
+                "<extra></extra>"
+            )
         )
 
         st.plotly_chart(
@@ -198,7 +229,8 @@ def render():
             use_container_width=True
         )
 
-    # Risk Distribution
+    # ---------------- Risk Distribution ----------------
+
     with col2:
 
         risk_data = (
@@ -220,21 +252,44 @@ def render():
             risk_data,
             x="Risk Level",
             y="Count",
-            title="Risk Level Distribution"
+            title="Risk Level Distribution",
+            text="Count"
+        )
+
+        fig = _chart_layout(fig)
+
+        fig.update_traces(
+            textposition="outside",
+            hovertemplate=(
+                "<b>%{x}</b><br>"
+                "Predictions: %{y}"
+                "<extra></extra>"
+            )
         )
 
         fig.update_layout(
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="#CBD5E1"),
             xaxis_title="",
-            yaxis_title="Predictions"
+            yaxis_title="Predictions",
+            yaxis=dict(
+                rangemode="tozero"
+            )
         )
 
         st.plotly_chart(
             fig,
             use_container_width=True
         )
+
+    # --------------------------------------------------
+    # Risk Threshold Explanation
+    # --------------------------------------------------
+
+    st.caption(
+        "Risk classification: "
+        "**Low < 40%** · "
+        "**Medium 40–69%** · "
+        "**High ≥ 70%**"
+    )
 
     # --------------------------------------------------
     # Probability Distribution
@@ -255,12 +310,20 @@ def render():
         title="Distribution of Churn Probabilities"
     )
 
+    fig = _chart_layout(fig)
+
     fig.update_layout(
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(color="#CBD5E1"),
         xaxis_title="Churn Probability (%)",
-        yaxis_title="Number of Predictions"
+        yaxis_title="Number of Predictions",
+        bargap=0.08
+    )
+
+    fig.update_traces(
+        hovertemplate=(
+            "Probability: %{x}<br>"
+            "Predictions: %{y}"
+            "<extra></extra>"
+        )
     )
 
     st.plotly_chart(
@@ -285,7 +348,7 @@ def render():
 
         trend_df["Date"] = (
             trend_df["created_at"]
-            .dt.date
+            .dt.normalize()
         )
 
         daily_predictions = (
@@ -303,12 +366,23 @@ def render():
             title="Daily Prediction Activity"
         )
 
+        fig = _chart_layout(fig)
+
         fig.update_layout(
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="#CBD5E1"),
             xaxis_title="Date",
-            yaxis_title="Predictions"
+            yaxis_title="Predictions",
+            xaxis=dict(
+                type="date",
+                tickformat="%d %b"
+            )
+        )
+
+        fig.update_traces(
+            hovertemplate=(
+                "Date: %{x|%d %b %Y}<br>"
+                "Predictions: %{y}"
+                "<extra></extra>"
+            )
         )
 
         st.plotly_chart(
@@ -322,46 +396,60 @@ def render():
             "No valid timestamp data is available for trend analysis."
         )
 
+    st.divider()
+
     # --------------------------------------------------
-    # Prediction Type Analysis
+    # Prediction Sources
     # --------------------------------------------------
 
     st.subheader("📂 Prediction Sources")
 
-    source_data = (
-        df["prediction_type"]
-        .value_counts()
-        .reset_index()
-    )
-
-    source_data.columns = [
-        "Prediction Type",
-        "Count"
-    ]
-
     col1, col2 = st.columns(2)
 
+    # ---------------- Single vs Bulk ----------------
+
     with col1:
+
+        source_data = (
+            df["prediction_type"]
+            .value_counts()
+            .reindex(
+                ["Bulk", "Single"],
+                fill_value=0
+            )
+            .reset_index()
+        )
+
+        source_data.columns = [
+            "Prediction Type",
+            "Count"
+        ]
 
         fig = px.bar(
             source_data,
             x="Prediction Type",
             y="Count",
-            title="Single vs Bulk Predictions"
+            title="Single vs Bulk Predictions",
+            text="Count"
         )
 
+        fig = _chart_layout(fig)
+
         fig.update_layout(
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="#CBD5E1"),
             xaxis_title="",
             yaxis_title="Predictions"
+        )
+
+        fig.update_traces(
+            textposition="outside"
         )
 
         st.plotly_chart(
             fig,
             use_container_width=True
         )
+
+    # ---------------- Top Users ----------------
 
     with col2:
 
@@ -381,15 +469,19 @@ def render():
             user_data,
             x="Username",
             y="Predictions",
-            title="Top Prediction Users"
+            title="Top Prediction Users",
+            text="Predictions"
         )
 
+        fig = _chart_layout(fig)
+
         fig.update_layout(
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="#CBD5E1"),
             xaxis_title="",
             yaxis_title="Predictions"
+        )
+
+        fig.update_traces(
+            textposition="outside"
         )
 
         st.plotly_chart(
@@ -400,41 +492,77 @@ def render():
     st.divider()
 
     # --------------------------------------------------
+    # Model Performance
+    # --------------------------------------------------
+
+    st.subheader("🤖 Model Performance")
+
+    st.caption(
+        "Performance of the deployed churn prediction model."
+    )
+
+    try:
+
+        performance_chart = model_performance()
+
+        st.plotly_chart(
+            performance_chart,
+            use_container_width=True
+        )
+
+    except Exception:
+
+        st.warning(
+            "Model performance visualization is currently unavailable."
+        )
+
+    st.divider()
+
+    # --------------------------------------------------
     # Key Insights
     # --------------------------------------------------
 
     st.subheader("💡 Key Insights")
 
-    if churn_rate >= 30:
+    insight_col1, insight_col2 = st.columns(2)
 
-        st.warning(
-            f"⚠️ The current recorded churn rate is "
-            f"**{churn_rate:.2f}%**, indicating a relatively "
-            f"high proportion of customers predicted to churn."
-        )
+    with insight_col1:
 
-    else:
+        if churn_rate >= 30:
 
-        st.success(
-            f"✅ The current recorded churn rate is "
-            f"**{churn_rate:.2f}%**."
+            st.warning(
+                f"⚠️ **Churn Alert**\n\n"
+                f"{churn_rate:.2f}% of recorded predictions "
+                f"are classified as churn."
+            )
+
+        else:
+
+            st.success(
+                f"✅ **Churn Rate**\n\n"
+                f"{churn_rate:.2f}% of recorded predictions "
+                f"are classified as churn."
+            )
+
+    with insight_col2:
+
+        st.info(
+            f"🎯 **Average Probability**\n\n"
+            f"The average predicted churn probability "
+            f"is **{avg_probability:.2f}%**."
         )
 
     st.info(
-        f"🎯 The average predicted churn probability is "
-        f"**{avg_probability:.2f}%**."
+        f"🚨 **High-Risk Customers**\n\n"
+        f"**{high_risk}** prediction(s) currently fall "
+        f"into the High Risk category."
     )
 
-    st.info(
-        f"🚨 **{high_risk}** prediction(s) currently fall into "
-        f"the High Risk category."
-    )
+    st.divider()
 
     # --------------------------------------------------
     # Export
     # --------------------------------------------------
-
-    st.divider()
 
     st.subheader("📥 Export Report")
 
