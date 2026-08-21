@@ -18,9 +18,10 @@ def login_user(user):
     st.session_state.user = {
         "id": user["id"],
         "username": user["username"],
-        "full_name": user["full_name"],
-        "email": user["email"],
+        "full_name": user["full_name"] if user["full_name"] else user["username"],
+        "email": user["email"] if user["email"] else "",
         "role": user["role"],
+        "status": user["status"],
     }
 
 

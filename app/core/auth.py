@@ -106,6 +106,10 @@ def authenticate(username: str, password: str):
     if user is None:
         return None
 
+    # Reject inactive / locked accounts
+    if user["status"] != "Active":
+        return None
+
     if not verify_password(password, user["password_hash"]):
         return None
 

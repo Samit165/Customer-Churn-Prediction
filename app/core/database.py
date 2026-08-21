@@ -108,10 +108,12 @@ def initialize_database():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
             password_hash TEXT NOT NULL,
+            full_name TEXT NOT NULL DEFAULT '',
+            email TEXT,
             role TEXT NOT NULL,
-            status TEXT NOT NULL,
-            created_at TEXT NOT NULL,
-            last_login TEXT
+            last_login TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            status TEXT NOT NULL DEFAULT 'Active'
         )
     """)
 
@@ -127,17 +129,27 @@ def initialize_database():
     ]
 
     if "status" not in user_columns:
-
         cursor.execute("""
             ALTER TABLE users
             ADD COLUMN status TEXT NOT NULL DEFAULT 'Active'
         """)
 
     if "last_login" not in user_columns:
-
         cursor.execute("""
             ALTER TABLE users
             ADD COLUMN last_login TEXT
+        """)
+
+    if "full_name" not in user_columns:
+        cursor.execute("""
+            ALTER TABLE users
+            ADD COLUMN full_name TEXT NOT NULL DEFAULT ''
+        """)
+
+    if "email" not in user_columns:
+        cursor.execute("""
+            ALTER TABLE users
+            ADD COLUMN email TEXT
         """)
 
     # ---------------- ACTIVITY LOG ---------------- #
@@ -260,7 +272,9 @@ def initialize_database():
 
 def create_user(username: str,
                 password: str,
-                role: str):
+                role: str,
+                full_name: str = "",
+                email: str = ""):
 
     conn = get_connection()
     cursor = conn.cursor()
@@ -297,14 +311,18 @@ def create_user(username: str,
             INSERT INTO users(
                 username,
                 password_hash,
+                full_name,
+                email,
                 role,
                 status,
                 created_at
             )
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         """, (
             username.strip(),
             hash_password(password),
+            full_name.strip() if full_name else "",
+            email.strip() if email else "",
             role,
             "Active",
             datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -402,6 +420,8 @@ def get_all_users():
     users = conn.execute("""
         SELECT
             username,
+            full_name,
+            email,
             role,
             status,
             created_at,

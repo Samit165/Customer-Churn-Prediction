@@ -429,6 +429,8 @@ def render():
         display_df = display_df.rename(
             columns={
                 "username": "Username",
+                "full_name": "Full Name",
+                "email": "Email",
                 "role": "Role",
                 "status": "Status",
                 "created_at": "Created",
@@ -440,6 +442,7 @@ def render():
             display_df[
                 [
                     "Username",
+                    "Full Name",
                     "Role",
                     "Status",
                     "Created",
@@ -624,24 +627,40 @@ def render():
 
     with st.form("create_user_form"):
 
-        col1, col2, col3 = st.columns(3)
+        row1_col1, row1_col2 = st.columns(2)
 
-        with col1:
+        with row1_col1:
 
             new_username = st.text_input(
-                "Username",
-                placeholder="Enter username"
+                "Username *",
+                placeholder="Enter username (min. 3 characters)"
             )
 
-        with col2:
+        with row1_col2:
+
+            new_full_name = st.text_input(
+                "Full Name *",
+                placeholder="Enter full name"
+            )
+
+        row2_col1, row2_col2, row2_col3 = st.columns(3)
+
+        with row2_col1:
 
             new_user_password = st.text_input(
-                "Password",
+                "Password *",
                 type="password",
-                placeholder="Enter password"
+                placeholder="Min. 6 characters"
             )
 
-        with col3:
+        with row2_col2:
+
+            new_email = st.text_input(
+                "Email (optional)",
+                placeholder="user@example.com"
+            )
+
+        with row2_col3:
 
             new_role = st.selectbox(
                 "Role",
@@ -660,29 +679,36 @@ def render():
         if create_clicked:
 
             clean_username = new_username.strip()
+            clean_full_name = new_full_name.strip()
 
             if not clean_username:
 
                 st.error(
-                    "Username is required."
+                    "❌ Username is required."
                 )
 
             elif len(clean_username) < 3:
 
                 st.error(
-                    "Username must contain at least 3 characters."
+                    "❌ Username must contain at least 3 characters."
+                )
+
+            elif not clean_full_name:
+
+                st.error(
+                    "❌ Full Name is required."
                 )
 
             elif not new_user_password:
 
                 st.error(
-                    "Password is required."
+                    "❌ Password is required."
                 )
 
             elif len(new_user_password) < 6:
 
                 st.error(
-                    "Password must contain at least 6 characters."
+                    "❌ Password must contain at least 6 characters."
                 )
 
             else:
@@ -690,35 +716,43 @@ def render():
                 result = create_user(
                     clean_username,
                     new_user_password,
-                    new_role
+                    new_role,
+                    full_name=clean_full_name,
+                    email=new_email.strip()
                 )
 
                 if result["success"]:
 
                     log_activity(
                         username,
-                        f"Created user {clean_username}"
+                        f"Created user {clean_username} with role {new_role}"
                     )
 
                     st.success(
-                        f"User **{clean_username}** created successfully."
+                        f"✅ User **{clean_username}** ({new_role}) created successfully!"
                     )
 
-                    st.rerun()
+                    st.session_state["_admin_user_created"] = True
 
                 elif result["error"] == "exists":
 
                     st.error(
-                        f"Username **{clean_username}** already exists."
+                        f"❌ Username **{clean_username}** already exists. "
+                        "Please choose a different username."
                     )
 
                 else:
 
                     st.error(
-                        f"Unable to create user: {result['error']}"
+                        f"❌ Unable to create user: {result['error']}"
                     )
 
+    # Rerun AFTER the form block to refresh the user table
+    if st.session_state.pop("_admin_user_created", False):
+        st.rerun()
+
     st.divider()
+
 
     # --------------------------------------------------
     # Activity Monitor
