@@ -215,20 +215,31 @@ def render():
     logs = fetch_all(
         "SELECT username, action, timestamp FROM activity_logs ORDER BY id DESC LIMIT 5"
     )
-
+    
+    # ── Recent Activity (real DB data) ────────────────
     if logs:
         for row in logs:
-            username  = row["username"]
-            action    = row["action"]
+            username = str(row["username"])
+            action = str(row["action"])
             timestamp = row["timestamp"]
-            # Format: show just HH:MM from the full datetime string
-            try:
-                time_part = timestamp.split(" ")[1][:5]
-            except Exception:
-                time_part = timestamp[:5]
 
-            # Pick an icon based on action keyword
-            icon = "🔐" if "Login" in action else ("✅" if "Prediction" in action else ("📦" if "Bulk" in action else ("📄" if "Report" in action else "🔔")))
+            # Format timestamp as HH:MM
+            try:
+                time_part = str(timestamp).split(" ")[1][:5]
+            except (IndexError, AttributeError):
+                time_part = str(timestamp)[:5]
+
+            # Pick icon based on action
+            if "Bulk" in action:
+                icon = "📦"
+            elif "Login" in action:
+                icon = "🔐"
+            elif "Prediction" in action:
+                icon = "✅"
+            elif "Report" in action:
+                icon = "📄"
+            else:
+                icon = "🔔"
 
             st.markdown(
                 f'<div class="act-row">'
@@ -239,9 +250,12 @@ def render():
                 f'</div>',
                 unsafe_allow_html=True,
             )
+
     else:
         st.markdown(
-            '<p style="color:#64748B; font-size:14px; padding:8px 0;">No activity recorded yet.</p>',
+            '<p style="color:#64748B; font-size:14px; padding:8px 0;">'
+            'No activity recorded yet.'
+            '</p>',
             unsafe_allow_html=True,
         )
 
