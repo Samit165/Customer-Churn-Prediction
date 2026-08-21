@@ -7,6 +7,7 @@ from components.charts import (
     prediction_trend,
     model_performance
 )
+from core.database import fetch_all
 
 
 # ── Reusable hover-section CSS injector ──────────────────────────
@@ -78,50 +79,35 @@ def _inject_section_hover_css():
                 transform: scale(1.20) rotate(-8deg);
             }
 
-            /* ── Activity table hover rows ───────────────── */
-            .activity-row {
+            /* ── Real activity rows ──────────────────────── */
+            .act-row {
                 display: flex;
                 align-items: center;
                 gap: 14px;
-                padding: 13px 16px;
+                padding: 12px 16px;
                 border-radius: 12px;
-                background: rgba(15, 23, 42, 0.60);
-                border: 1px solid rgba(255, 255, 255, 0.04);
+                background: rgba(15, 23, 42, 0.55);
+                border: 1px solid rgba(255,255,255,0.05);
                 margin-bottom: 8px;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                transition: all 0.28s cubic-bezier(0.4,0,0.2,1);
                 cursor: default;
             }
-            .activity-row:hover {
-                background: rgba(37, 99, 235, 0.12);
-                border-color: rgba(96, 165, 250, 0.25);
-                transform: translateX(6px);
-                box-shadow: 0 4px 18px rgba(37, 99, 235, 0.18);
+            .act-row:hover {
+                background   : rgba(37,99,235,0.13);
+                border-color : rgba(96,165,250,0.28);
+                transform    : translateX(6px);
+                box-shadow   : 0 4px 18px rgba(37,99,235,0.18);
             }
-            .activity-row:hover .act-time {
-                color: #60A5FA;
+            .act-row:hover .act-user  { color:#60A5FA; }
+            .act-row:hover .act-label { color:#FFFFFF; }
+            .act-dot  {
+                width:7px; height:7px; border-radius:50%;
+                background:#2563EB; flex-shrink:0;
+                box-shadow: 0 0 6px rgba(37,99,235,0.55);
             }
-            .activity-row:hover .act-text {
-                color: #FFFFFF;
-            }
-            .act-time {
-                font-size: 13px;
-                font-weight: 600;
-                color: #64748B;
-                min-width: 52px;
-                transition: color 0.3s ease;
-            }
-            .act-dot {
-                width: 7px; height: 7px;
-                border-radius: 50%;
-                background: #2563EB;
-                flex-shrink: 0;
-                box-shadow: 0 0 6px rgba(37, 99, 235, 0.50);
-            }
-            .act-text {
-                font-size: 14px;
-                color: #CBD5E1;
-                transition: color 0.3s ease;
-            }
+            .act-user  { font-size:12px; font-weight:600; color:#64748B; min-width:60px; transition:color 0.28s ease; }
+            .act-label { font-size:13px; color:#CBD5E1; flex:1; transition:color 0.28s ease; }
+            .act-time  { font-size:11px; color:#475569; white-space:nowrap; }
         </style>
         """,
         unsafe_allow_html=True,
@@ -219,26 +205,43 @@ def render():
 
     st.divider()
 
-    # ── Recent Activity ────────────────────────────────
+    # ── Recent Activity (real DB data) ────────────────
     st.markdown(
         '<div class="dash-section">'
         '<div class="dash-section-title"><span class="sec-icon">🕑</span> Recent Activity</div>',
         unsafe_allow_html=True,
     )
 
-    activities = [
-        ("10:15", "✅ Prediction Completed"),
-        ("09:52", "🔐 Admin Login"),
-        ("09:30", "📦 Bulk Prediction"),
-        ("09:05", "📄 Report Generated"),
-    ]
-    for time_str, desc in activities:
+    logs = fetch_all(
+        "SELECT username, action, timestamp FROM activity_logs ORDER BY id DESC LIMIT 5"
+    )
+
+    if logs:
+        for row in logs:
+            username  = row["username"]
+            action    = row["action"]
+            timestamp = row["timestamp"]
+            # Format: show just HH:MM from the full datetime string
+            try:
+                time_part = timestamp.split(" ")[1][:5]
+            except Exception:
+                time_part = timestamp[:5]
+
+            # Pick an icon based on action keyword
+            icon = "🔐" if "Login" in action else ("✅" if "Prediction" in action else ("📦" if "Bulk" in action else ("📄" if "Report" in action else "🔔")))
+
+            st.markdown(
+                f'<div class="act-row">'
+                f'  <span class="act-dot"></span>'
+                f'  <span class="act-user">{username}</span>'
+                f'  <span class="act-label">{icon} {action}</span>'
+                f'  <span class="act-time">{time_part}</span>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+    else:
         st.markdown(
-            f'<div class="activity-row">'
-            f'  <span class="act-time">{time_str}</span>'
-            f'  <span class="act-dot"></span>'
-            f'  <span class="act-text">{desc}</span>'
-            f'</div>',
+            '<p style="color:#64748B; font-size:14px; padding:8px 0;">No activity recorded yet.</p>',
             unsafe_allow_html=True,
         )
 
