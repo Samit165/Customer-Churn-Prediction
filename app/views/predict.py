@@ -181,6 +181,10 @@ def render():
         }
 
         prediction, probability, confidence = predict_customer(customer_data)
+        
+        st.session_state["last_customer_data"] = customer_data
+        st.session_state["last_prediction"] = prediction
+        st.session_state["last_probability"] = probability
 
         st.divider()
 
